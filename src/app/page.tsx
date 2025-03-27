@@ -1,101 +1,103 @@
-import Image from "next/image";
+"use client";
+
+import useExcelStore, { numberToExcelColumn } from "@/store/zustand";
+import { ReactElement, ReactNode } from "react";
+
+// You can import any component you want as a named export from 'react-virtualized', eg
+import { AutoSizer, Grid, GridCellProps, MultiGrid } from "react-virtualized";
+// Create a HOC that injects the store context
+
+import React from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const { tableValues, setCurrentCell, setCellValue, currentCell } =
+    useExcelStore();
+  
+  // Memoized cell renderer function
+  const cellRenderer = React.useCallback(
+    ({ columnIndex, rowIndex, key, style }: GridCellProps) => {
+      const isHeader = rowIndex === 0 || columnIndex === 0;
+      const cellValue = tableValues[rowIndex]?.[columnIndex] || "";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      return (
+        <div
+          key={key}
+          style={style}
+          className={`border-[0.25px] flex items-center justify-center text-sm `}
+          onClick={() => setCurrentCell(rowIndex, columnIndex)}
+        >
+          {/* Column headers (A, B, C, ...) */}
+          {rowIndex === 0 && columnIndex > 0 && (
+            <strong>{numberToExcelColumn(columnIndex - 1)}</strong>
+          )}
+          {/* Row headers (1, 2, 3, ...) */}
+          {columnIndex === 0 && rowIndex > 0 && <strong>{rowIndex}</strong>}
+          {/* Editable cell */}
+          {!isHeader && (
+            <input
+              className="w-full h-full px-1 text-center border-none outline-none "
+              defaultValue={cellValue} // Use defaultValue to prevent input reset on re-render
+              onBlur={(e) =>
+                setCellValue(rowIndex, columnIndex, e.target.value)
+              } // Save on blur
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      );
+    },
+    [tableValues, setCurrentCell, setCellValue, currentCell]
+  );
+
+  return (
+    <div className="w-full h-screen p-4">
+      <div className="border border-gray-300 rounded-xl p-4 flex items-center gap-4 bg-white">
+        <p className="p-2 border w-fit rounded-lg bg-gray-200 text-sm">
+          {numberToExcelColumn(currentCell.columnIndex - 1)}
+          {currentCell.rowIndex}
+        </p>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setCellValue(
+              currentCell.rowIndex,
+              currentCell.columnIndex,
+              tableValues[currentCell.rowIndex]
+            );
+          }}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+          <input
+            className="border rounded-lg p-1 text-sm"
+            value={
+              tableValues[currentCell.rowIndex][currentCell.columnIndex] || ""
+            }
+            onChange={(e) =>
+              setCellValue(
+                currentCell.rowIndex,
+                currentCell.columnIndex,
+                e.target.value
+              )
+            }
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </form>
+      </div>
+      <div className="w-full h-full">
+        <AutoSizer>
+          {({ height, width }) => (
+            <MultiGrid
+              fixedColumnCount={1}
+              fixedRowCount={1}
+              cellRenderer={cellRenderer}
+              columnCount={10000}
+              rowCount={10000}
+              columnWidth={120}
+              rowHeight={30}
+              width={width}
+              height={height}
+            />
+          )}
+        </AutoSizer>
+      </div>
     </div>
   );
 }
