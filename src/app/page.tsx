@@ -3,9 +3,7 @@
 import useExcelStore, { numberToExcelColumn } from "@/store/zustand";
 import { ReactElement, ReactNode } from "react";
 
-// You can import any component you want as a named export from 'react-virtualized', eg
 import { AutoSizer, Grid, GridCellProps, MultiGrid } from "react-virtualized";
-// Create a HOC that injects the store context
 
 import React from "react";
 
@@ -13,7 +11,6 @@ export default function Home() {
   const { tableValues, setCurrentCell, setCellValue, currentCell } =
     useExcelStore();
   
-  // Memoized cell renderer function
   const cellRenderer = React.useCallback(
     ({ columnIndex, rowIndex, key, style }: GridCellProps) => {
       const isHeader = rowIndex === 0 || columnIndex === 0;
@@ -36,7 +33,7 @@ export default function Home() {
           {!isHeader && (
             <input
               className="w-full h-full px-1 text-center border-none outline-none "
-              defaultValue={cellValue} // Use defaultValue to prevent input reset on re-render
+              defaultValue={cellValue}
               onBlur={(e) =>
                 setCellValue(rowIndex, columnIndex, e.target.value)
               } // Save on blur
